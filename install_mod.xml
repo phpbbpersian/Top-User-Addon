@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+		<?xml-stylesheet type="text/xsl" href="./contrib/modx.prosilver.en.xsl"?>
+		<!--
+		$Id: top_five.xml 47 2008-10-01 05:32:19Z RMcGirr83 $
+		For security purposes, please check: http://www.phpbb.com/mods/ for the latest version of this MOD. Although MODs are checked before being allowed in the MODs Database there is no guarantee that there are no security problems within the MOD. No support will be given for MODs not found within the MODs Database which can be found at http://www.phpbb.com/mods/-->
+<mod xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.phpbb.com/mods/xml/modx-1.2.5.xsd">
+    <header>
+	   <license>http://opensource.org/licenses/gpl-license.php GNU General Public License v2</license>
+            <title lang="en">Top Five</title>
+                <description lang="en">Will show the last five topics that had a recent post, the top five most active users and the top five latest registered users</description>
+				<author-notes lang="en"><![CDATA[The mod takes advantage of caching the top five newest users and top five most active/greatest amount of posts users.  When a user is added, deleted or changed in default group the cache will purge itself to reflect the new change.]]></author-notes>
+				<author-group>
+					<author>
+						<realname>Richard McGirr</realname>
+						<email>rmcgirr83@gmail.com</email>
+						<username>RMcGirr83</username>
+						<homepage><![CDATA[http://rmcgirr83.org]]></homepage>
+					</author>
+				</author-group>
+				<mod-version>1.0.1.d
+				</mod-version>
+				<installation>
+					<level>easy</level>
+					<time>120</time>
+					<target-version>3.0.7-PL1
+					</target-version>
+				</installation>
+                <history>
+                    <entry>
+						<date>2009-01-03</date>
+						<rev-version>1.0.0
+						</rev-version>
+						<changelog lang="en">
+							<change>First Release</change>
+						</changelog>
+            		</entry>
+                    <entry>
+						<date>2009-01-26</date>
+						<rev-version>1.0.1
+						</rev-version>
+						<changelog lang="en">
+							<change>Fixed mysqli error and added caching in includes top_five.  MODX 1.2.2</change>
+						</changelog>
+            		</entry>
+                    <entry>
+						<date>2009-03-04</date>
+						<rev-version>1.0.1.a
+						</rev-version>
+						<changelog lang="en">
+							<change>SQL change for latest posts and reduced user posts count cache to 5 minutes</change>
+						</changelog>
+            		</entry>
+                    <entry>
+						<date>2009-03-29</date>
+						<rev-version>1.0.1.b
+						</rev-version>
+						<changelog lang="en">
+							<change>Fixed bug in topic query and language comments in lang file</change>
+						</changelog>
+            		</entry>
+                    <entry>
+						<date>2009-08-17</date>
+						<rev-version>1.0.1.c
+						</rev-version>
+						<changelog lang="en">
+							<change>Fixed formatting in html files (valign="top")</change>
+						</changelog>
+            		</entry>
+                    <entry>
+						<date>2010-07-21</date>
+						<rev-version>1.0.1.d
+						</rev-version>
+						<changelog lang="en">
+							<change>Corrected slow query being complained about by some hosts</change>
+							<change>purge the cache on adding/deleting or changing a users default group or deleting a user</change>
+						</changelog>
+            		</entry>					
+        		</history>
+			<link-group>
+				<link type="template" href="contrib/subsilver2.xml" lang="en">subsilver2</link>
+				<link type="contrib" href="contrib/101c_101d.xml" lang="en">Update 1.0.1.c to 1.0.1.d</link>
+			</link-group>
+		</header>
+		<action-group>
+		<copy>
+			<file from="root/*.*" to="*.*" />
+		</copy>
+		<open src="index.php">
+        	<edit>
+    			<find><![CDATA[// Assign index specific vars
+$template->assign_vars(array(]]></find>
+    			<action type="before-add"><![CDATA[//-- mod: top five ---------------------------------------------------------//
+	include($phpbb_root_path . 'includes/top_five.' . $phpEx);
+//-- end: top five ---------------------------------------------------------//]]></action>
+            </edit>
+		</open>
+		<open src="includes/functions_user.php">
+        	<edit>
+    			<find><![CDATA[		set_config('newest_user_colour', $row['user_colour'], true);
+	}]]></find>
+    			<action type="after-add"><![CDATA[//-- mod: top five ---------------------------------------------------------//
+// destroy the top_five cache
+	global $cache;
+	$cache->purge('_top_five_newest_users');
+	$cache->purge('_top_five_posters');
+//-- end: top five ---------------------------------------------------------//]]></action>
+            </edit>		
+        	<edit>
+    			<find><![CDATA[	// Because some tables/caches use username-specific data we need to purge this here.
+	$cache->destroy('sql', MODERATOR_CACHE_TABLE);]]></find>
+    			<action type="before-add"><![CDATA[//-- mod: top five ---------------------------------------------------------//
+// destroy the top_five cache
+	$cache->purge('_top_five_newest_users');
+	$cache->purge('_top_five_posters');
+//-- end: top five ---------------------------------------------------------//]]></action>
+            </edit>
+        	<edit>
+    			<find><![CDATA[	// Reset newest user info if appropriate
+	if ($config['newest_user_id'] == $user_id)]]></find>
+    			<action type="before-add"><![CDATA[//-- mod: top five ---------------------------------------------------------//
+	// Reset newest user info if appropriate
+	if ($config['newest_user_id'] != $user_id)
+	{
+		// destroy the top_five cache
+		$cache->purge('_top_five_newest_users');
+		$cache->purge('_top_five_posters');
+	}
+//-- end: top five ---------------------------------------------------------//]]></action>
+            </edit>
+			<edit>
+    			<find><![CDATA[	// Because some tables/caches use usercolour-specific data we need to purge this here.
+	$cache->destroy('sql', MODERATOR_CACHE_TABLE);]]></find>
+    			<action type="before-add"><![CDATA[//-- mod: top five ---------------------------------------------------------//
+// destroy the top_five cache
+	$cache->purge('_top_five_newest_users');
+	$cache->purge('_top_five_posters');
+//-- end: top five ---------------------------------------------------------//]]></action>
+            </edit>
+			<edit>
+    			<find><![CDATA[		update_foes(array($group_id));
+	}]]></find>
+    			<action type="before-add"><![CDATA[//-- mod: top five ---------------------------------------------------------//
+// destroy the top_five cache
+	global $cache;
+	$cache->purge('_top_five_newest_users');
+	$cache->purge('_top_five_posters');
+//-- end: top five ---------------------------------------------------------//]]></action>
+            </edit>			
+		</open>			
+		<open src="styles/prosilver/template/index_body.html">
+			<edit>
+                <find><![CDATA[<!-- IF not S_USER_LOGGED_IN and not S_IS_BOT -->]]></find>
+				<action type="before-add"><![CDATA[<!-- INCLUDE top_five_body.html -->
+				]]></action>
+            </edit>
+        </open>
+		<diy-instructions lang="en">Refresh the template (ACP->Styles->template->refresh) after installing the mod to regenerate the template changes.</diy-instructions>
+	</action-group>
+</mod>
