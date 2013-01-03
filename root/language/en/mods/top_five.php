@@ -42,6 +42,9 @@ $lang = array_merge($lang, array(
     'TOP_FIVE_NEWEST'	=> 'Newest Users',
     'IN'                => 'In',
 	'BY'                => 'by:',
+    'TOP_FIVE_LIKES'    => 'Top Users',
+    'USER_LIKE'         => 'This user has received %s like',
+    'USER_LIKES'        => 'This user has received %s likes',
 ));
 
 ?>

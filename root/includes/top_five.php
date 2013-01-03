@@ -155,5 +155,32 @@ if (!defined('INCLUDES_TOP_FIVE_PHP'))
 			'USERNAME_FULL'		=> $username_string)
 		);
 	}
+   // phpBB ajax like Add-on
+   $sql_array = array(
+      'SELECT'    => 'COUNT(l.poster_id) as user_likes, u.user_id, u.username, u.user_colour',
+
+      'FROM'      => array(
+         LIKES_TABLE => 'l',
+         USERS_TABLE    => 'u'
+      ),
+
+      'WHERE'     =>  'l.poster_id = u.user_id',
+         
+      'GROUP_BY'  => 'l.poster_id',
+
+      'ORDER_BY'  => 'user_likes DESC',
+   );
+   $sql = $db->sql_build_query('SELECT', $sql_array);
+   $result = $db->sql_query_limit($sql, 5);
+      while ($row = $db->sql_fetchrow($result))
+   {
+      $template->assign_block_vars('toplikes', array(
+      'LIKECOUNT'      => $row['user_likes'] > 1 ? sprintf($user->lang['USER_LIKES'], $row['user_likes']) : sprintf($user->lang['USER_LIKE'], $row['user_likes']),
+      'USERNAME' => $row['username'],
+      'USERCOLOUR' => $row['user_colour'],
+      'USERLINK' => append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=viewprofile&amp;u=' . $row['user_id'] . ''),
+      ));
+   }
+   $db->sql_freeresult($result);
 }
 ?>
